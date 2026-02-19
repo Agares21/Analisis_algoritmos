@@ -55,13 +55,14 @@ const {
   toggleDirected,
 } = useGraph();
 </script>
-
 <style scoped>
+/* --- ESTILOS ORIGINALES (ESCRITORIO) --- */
 .toolbar {
   padding: 10px 20px;
   background: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
   display: flex;
+  flex-wrap: wrap; /* ¡Magia 1! Permite que los elementos bajen de línea */
   gap: 15px;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -70,6 +71,7 @@ const {
 .group {
   display: flex;
   gap: 5px;
+  flex-wrap: wrap; /* Permite que los botones del grupo también salten si es muy angosto */
 }
 
 button {
@@ -119,5 +121,41 @@ button.active {
   width: 1px;
   height: 25px;
   background: #ccc;
+}
+
+/* --- ESTILOS PARA CELULARES --- */
+@media (max-width: 768px) {
+  .toolbar {
+    justify-content: center; /* Centramos todo */
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .group {
+    justify-content: center;
+    width: 100%; /* Forzamos a que el grupo de botones tome todo el ancho */
+  }
+
+  .separator {
+    display: none; /* Ocultamos las rayitas grises en celular porque se ven mal al bajar de línea */
+  }
+
+  .danger {
+    margin-left: 0; /* Quitamos el margen automático */
+    width: 100%; /* Hacemos el botón de borrar de todo el ancho (más fácil de tocar) */
+    padding: 12px; /* Un poco más alto para los dedos */
+  }
+
+  .options {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .status {
+    width: 100%;
+    text-align: center;
+    margin-top: -5px;
+  }
 }
 </style>

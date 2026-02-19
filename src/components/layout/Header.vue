@@ -19,13 +19,13 @@ import { RouterLink } from "vue-router";
     </nav>
   </header>
 </template>
-
 <style scoped>
+/* --- ESTILOS PARA ESCRITORIO (Los que ya tenías) --- */
 .mi-header {
-  background-color: #1e293b; /* Color oscuro */
+  background-color: #1e293b;
   color: white;
   display: flex;
-  justify-content: space-between; /* Separa logo y menú */
+  justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -38,7 +38,7 @@ import { RouterLink } from "vue-router";
 
 .logo h3 {
   margin: 0;
-  color: #42b883; /* Verde Vue */
+  color: #42b883;
 }
 .logo img {
   max-height: 80px;
@@ -47,7 +47,7 @@ import { RouterLink } from "vue-router";
 
 nav {
   display: flex;
-  gap: 1.5rem; /* Espacio entre enlaces */
+  gap: 1.5rem;
 }
 
 .nav-link {
@@ -61,9 +61,42 @@ nav {
   color: white;
 }
 
-/* Esta clase se añade automática cuando estás en esa página */
 .router-link-active {
   color: #42b883;
   border-bottom: 2px solid #42b883;
+}
+
+/* --- ESTILOS PARA CELULARES (La magia de la responsividad) --- */
+@media (max-width: 768px) {
+  .mi-header {
+    /* Cambia la dirección de fila a columna */
+    flex-direction: column;
+    padding: 1rem;
+    gap: 15px;
+  }
+
+  .logo {
+    /* Apila el logo y el texto, y los centra */
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .logo img {
+    /* Achica un poquito el logo en celulares para ahorrar espacio */
+    max-height: 60px;
+  }
+
+  .logo h3 {
+    font-size: 1.3rem; /* Ajusta el tamaño del título */
+  }
+
+  nav {
+    /* Permite que los enlaces salten de línea si no caben */
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+  }
 }
 </style>
