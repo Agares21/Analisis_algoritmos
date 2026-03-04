@@ -6,7 +6,7 @@
         :class="{ active: currentMode === 'move' }"
         title="Mover nodos"
       >
-        🖐 Mover
+        🖐 Mover y Editar
       </button>
       <button
         @click="setMode('node')"
