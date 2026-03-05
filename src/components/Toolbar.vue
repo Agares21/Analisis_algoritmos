@@ -6,21 +6,21 @@
         :class="{ active: currentMode === 'move' }"
         title="Mover nodos"
       >
-        🖐 Mover y Editar
+        Mover y Editar
       </button>
       <button
         @click="setMode('node')"
         :class="{ active: currentMode === 'node' }"
-        title="Clic en espacio vacío para crear"
+        title="Clic en espacio vacio para crear"
       >
-        🔵 Nodo
+        Nodo
       </button>
       <button
         @click="setMode('edge')"
         :class="{ active: currentMode === 'edge' }"
         title="Clic origen -> Clic destino"
       >
-        🔗 Arista
+        Arista
       </button>
 
       <button
@@ -29,7 +29,7 @@
         title="Clic en nodo/arista para borrar"
         class="borrador"
       >
-        🧽 Borrador
+        Borrador
       </button>
     </div>
 
@@ -43,7 +43,7 @@
     </div>
 
     <span class="status" v-if="currentMode === 'edge'">
-      👉 {{ edgeStep }}
+      {{ edgeStep }}
     </span>
 
     <div class="group right-actions">
@@ -52,10 +52,10 @@
         :class="{ 'matriz-active': showMatrixPanel }"
         class="btn-matriz"
       >
-        🧮 Matriz
+        Matriz
       </button>
 
-      <button @click="exportGraph" class="btn-exportar">💾 Exportar</button>
+      <button @click="exportGraph" class="btn-exportar">Exportar</button>
 
       <input
         type="file"
@@ -65,17 +65,60 @@
         @change="importGraph"
       />
       <label for="import-file" class="btn-importar base-btn">
-        📂 Importar
+        Importar
       </label>
 
       <div class="separator hide-mobile"></div>
 
-      <button @click="clearGraph" class="danger">🗑 Borrar Todo</button>
+      <button @click="openHelp" class="btn-help">Help</button>
+
+      <button @click="clearGraph" class="danger">Borrar Todo</button>
+    </div>
+
+    <div v-if="showHelpModal" class="help-overlay" @click.self="closeHelp">
+      <div class="help-modal" role="dialog" aria-modal="true" aria-label="Ayuda de grafo">
+        <div class="help-header">
+          <h3>Guia rapida de la ventana de grafos</h3>
+          <button class="help-close" @click="closeHelp" aria-label="Cerrar ayuda">X</button>
+        </div>
+
+        <div class="help-content">
+          <p><strong>1. Herramientas principales</strong></p>
+          <p>
+            Mover y Editar: selecciona nodos/aristas y haz doble clic para editar
+            nombre o peso.
+          </p>
+          <p>Nodo: clic en espacio vacio para crear un nuevo nodo.</p>
+          <p>
+            Arista: selecciona nodo origen y luego destino para conectarlos con un
+            peso.
+          </p>
+          <p>Borrador: elimina nodos o aristas con un clic.</p>
+
+          <p><strong>2. Opciones</strong></p>
+          <p>Dirigido (Flechas): activa o desactiva la direccion de las aristas.</p>
+          <p>
+            Matriz: abre/cierra la matriz de adyacencia con conteos y sumas por
+            fila/columna.
+          </p>
+          <p>Exportar: guarda tu grafo en un archivo JSON.</p>
+          <p>Importar: carga un grafo desde un archivo JSON.</p>
+          <p>Borrar Todo: limpia todo el lienzo y reinicia la edicion.</p>
+
+          <p><strong>3. Atajos utiles</strong></p>
+          <p>
+            Puedes seleccionar un nodo o arista y presionar Delete/Backspace para
+            eliminar.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useGraph } from "../composables/useGraph";
 
 const {
@@ -90,6 +133,33 @@ const {
   exportGraph,
   importGraph,
 } = useGraph();
+
+const route = useRoute();
+const router = useRouter();
+const showHelpModal = ref(false);
+
+const openHelp = () => {
+  showHelpModal.value = true;
+};
+
+const closeHelp = () => {
+  showHelpModal.value = false;
+  if (route.query.help) {
+    const query = { ...route.query };
+    delete query.help;
+    router.replace({ query });
+  }
+};
+
+watch(
+  () => route.query.help,
+  (helpValue) => {
+    if (helpValue === "1" || helpValue === "true") {
+      showHelpModal.value = true;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>
@@ -103,6 +173,7 @@ const {
   gap: 15px;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .group {
@@ -112,12 +183,10 @@ const {
   align-items: center;
 }
 
-/* El grupo derecho empuja todo hacia la derecha */
 .right-actions {
   margin-left: auto;
 }
 
-/* Todos los botones comparten esta base */
 button,
 .base-btn {
   padding: 8px 16px;
@@ -161,11 +230,11 @@ button.active {
   color: #d63384;
 }
 
-/* --- COLORES PERSONALIZADOS PARA NUEVOS BOTONES --- */
 .btn-matriz {
   border-color: #10b981;
   color: #10b981;
 }
+
 .btn-matriz.matriz-active,
 .btn-matriz:hover {
   background: #10b981;
@@ -176,6 +245,7 @@ button.active {
   border-color: #3b82f6;
   color: #3b82f6;
 }
+
 .btn-exportar:hover {
   background: #3b82f6;
   color: white;
@@ -185,8 +255,19 @@ button.active {
   border-color: #f59e0b;
   color: #f59e0b;
 }
+
 .btn-importar:hover {
   background: #f59e0b;
+  color: white;
+}
+
+.btn-help {
+  border-color: #06b6d4;
+  color: #0e7490;
+}
+
+.btn-help:hover {
+  background: #06b6d4;
   color: white;
 }
 
@@ -195,6 +276,7 @@ button.active {
   color: white;
   border: none;
 }
+
 .danger:hover {
   background: #bb2d3b;
 }
@@ -205,7 +287,60 @@ button.active {
   background: #ccc;
 }
 
-/* --- ESTILOS PARA CELULARES --- */
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.help-modal {
+  width: min(680px, 100%);
+  max-height: 85vh;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.help-header h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.help-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.help-content {
+  padding: 16px;
+  overflow-y: auto;
+  max-height: calc(85vh - 60px);
+}
+
+.help-content p {
+  margin: 0 0 10px;
+  color: #334155;
+}
+
 @media (max-width: 768px) {
   .toolbar {
     justify-content: center;
@@ -219,12 +354,13 @@ button.active {
   }
 
   .right-actions {
-    margin-left: 0; /* Quitamos el empuje a la derecha en móviles */
+    margin-left: 0;
   }
 
   .separator {
     display: none;
   }
+
   .hide-mobile {
     display: none;
   }
@@ -232,7 +368,7 @@ button.active {
   .danger,
   .base-btn,
   button {
-    flex-grow: 1; /* Los botones se estiran para ser más fáciles de tocar */
+    flex-grow: 1;
     text-align: center;
   }
 
@@ -246,6 +382,14 @@ button.active {
     width: 100%;
     text-align: center;
     margin-top: -5px;
+  }
+
+  .help-modal {
+    max-height: 92vh;
+  }
+
+  .help-content {
+    max-height: calc(92vh - 60px);
   }
 }
 </style>
