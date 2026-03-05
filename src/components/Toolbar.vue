@@ -6,21 +6,21 @@
         :class="{ active: currentMode === 'move' }"
         title="Mover nodos"
       >
-        Mover y Editar
+        🖐 Mover y Editar
       </button>
       <button
         @click="setMode('node')"
         :class="{ active: currentMode === 'node' }"
         title="Clic en espacio vacio para crear"
       >
-        Nodo
+        🔵 Nodo
       </button>
       <button
         @click="setMode('edge')"
         :class="{ active: currentMode === 'edge' }"
         title="Clic origen -> Clic destino"
       >
-        Arista
+        🔗 Arista
       </button>
 
       <button
@@ -29,7 +29,7 @@
         title="Clic en nodo/arista para borrar"
         class="borrador"
       >
-        Borrador
+        🧽 Borrador
       </button>
     </div>
 
@@ -52,10 +52,10 @@
         :class="{ 'matriz-active': showMatrixPanel }"
         class="btn-matriz"
       >
-        Matriz
+        🧮 Matriz
       </button>
 
-      <button @click="exportGraph" class="btn-exportar">Exportar</button>
+      <button @click="exportGraph" class="btn-exportar">💾 Exportar</button>
 
       <input
         type="file"
@@ -65,21 +65,24 @@
         @change="importGraph"
       />
       <label for="import-file" class="btn-importar base-btn">
-        Importar
+        📂 Importar
       </label>
 
       <div class="separator hide-mobile"></div>
 
-      <button @click="openHelp" class="btn-help">Help</button>
+      <button @click="openHelp" class="btn-help">❓ Help</button>
 
-      <button @click="clearGraph" class="danger">Borrar Todo</button>
+      <button @click="clearGraph" class="danger">🗑 Borrar Todo</button>
     </div>
 
     <div v-if="showHelpModal" class="help-overlay" @click.self="closeHelp">
       <div class="help-modal" role="dialog" aria-modal="true" aria-label="Ayuda de grafo">
         <div class="help-header">
           <h3>Guia rapida de la ventana de grafos</h3>
-          <button class="help-close" @click="closeHelp" aria-label="Cerrar ayuda">X</button>
+          <div class="help-actions">
+            <button class="btn-pdf" @click="downloadHelpPdf">📄 Descargar PDF</button>
+            <button class="help-close" @click="closeHelp" aria-label="Cerrar ayuda">X</button>
+          </div>
         </div>
 
         <div class="help-content">
@@ -149,6 +152,78 @@ const closeHelp = () => {
     delete query.help;
     router.replace({ query });
   }
+};
+
+const downloadHelpPdf = () => {
+  const contenido = `
+    <h1>Manual general del sitio web</h1>
+    <p>Fecha: ${new Date().toLocaleDateString()}</p>
+
+    <h2>1. Inicio</h2>
+    <p>
+      Presenta el proyecto de Analisis de Algoritmos y da acceso rapido a las
+      secciones principales.
+    </p>
+
+    <h2>2. Algoritmo</h2>
+    <p>
+      Muestra contenido teorico/practico de algoritmos para consulta y apoyo de estudio.
+    </p>
+
+    <h2>3. Crea tu Grafo (Editor)</h2>
+    <p>
+      Es la zona interactiva para construir y analizar grafos con nodos, aristas,
+      pesos y matriz de adyacencia.
+    </p>
+    <p><strong>Herramientas:</strong></p>
+    <p>- Mover y Editar: seleccionar y editar nodos/aristas (doble clic).</p>
+    <p>- Nodo: crear nodos con clic en espacio vacio.</p>
+    <p>- Arista: conectar origen y destino, asignando peso.</p>
+    <p>- Borrador: eliminar nodos o aristas.</p>
+    <p>- Dirigido: alterna flechas en las aristas.</p>
+    <p>- Matriz: abre la matriz de adyacencia con conteos y sumas.</p>
+    <p>- Exportar/Importar: guardar y cargar grafos en JSON.</p>
+    <p>- Borrar Todo: limpia el lienzo.</p>
+    <p>- Atajo: Delete/Backspace elimina el elemento seleccionado.</p>
+
+    <h2>4. Acerca de</h2>
+    <p>
+      Seccion informativa del proyecto, objetivos, contexto y detalles del equipo.
+    </p>
+
+    <h2>Recomendaciones de uso</h2>
+    <p>
+      1) Activa Matriz para verificar conexiones y pesos en tiempo real.<br />
+      2) Usa Exportar para guardar avances frecuentes.<br />
+      3) Importa archivos JSON para continuar ejercicios anteriores.
+    </p>
+  `;
+
+  const ventana = window.open("", "_blank");
+  if (!ventana) return;
+
+  ventana.document.write(`
+    <!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Manual del sitio - Analisis de Algoritmos</title>
+        <style>
+          body { font-family: Arial, sans-serif; color: #0f172a; margin: 24px; line-height: 1.5; }
+          h1 { font-size: 24px; margin-bottom: 8px; }
+          h2 { font-size: 18px; margin-top: 20px; margin-bottom: 8px; color: #0e7490; }
+          p { margin: 6px 0; }
+          @media print { body { margin: 14mm; } }
+        </style>
+      </head>
+      <body>
+        ${contenido}
+      </body>
+    </html>
+  `);
+  ventana.document.close();
+  ventana.focus();
+  ventana.print();
 };
 
 watch(
@@ -320,6 +395,22 @@ button.active {
 .help-header h3 {
   margin: 0;
   color: #0f172a;
+}
+
+.help-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-pdf {
+  border-color: #0e7490;
+  color: #0e7490;
+}
+
+.btn-pdf:hover {
+  background: #0e7490;
+  color: #ffffff;
 }
 
 .help-close {
