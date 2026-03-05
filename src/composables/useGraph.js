@@ -12,6 +12,35 @@ const isDirected = ref(false);
 // --- NUEVO: ESTADO DE LA MATRIZ ---
 const showMatrixPanel = ref(false);
 const matrixData = ref({ labels: [], matrix: [] });
+const getArrowsConfig = (directed) =>
+  directed ? "to" : { to: { enabled: false } };
+
+const normalizeUndirectedEdges = () => {
+  const allEdges = edges.get();
+  const seenPairs = new Map();
+  const edgesToRemove = [];
+  const edgesToUpdate = [];
+
+  allEdges.forEach((edge) => {
+    const a = Number(edge.from);
+    const b = Number(edge.to);
+    const pairKey = a <= b ? `${a}-${b}` : `${b}-${a}`;
+
+    if (!seenPairs.has(pairKey)) {
+      seenPairs.set(pairKey, edge.id);
+      return;
+    }
+
+    edgesToRemove.push(edge.id);
+  });
+
+  seenPairs.forEach((edgeId) => {
+    edgesToUpdate.push({ id: edgeId, arrows: getArrowsConfig(false) });
+  });
+
+  if (edgesToRemove.length > 0) edges.remove(edgesToRemove);
+  if (edgesToUpdate.length > 0) edges.update(edgesToUpdate);
+};
 
 export function useGraph() {
   // Función para calcular y actualizar la matriz al instante
@@ -99,7 +128,7 @@ export function useGraph() {
         from: sourceNode.value,
         to: targetId,
         label: String(weight),
-        arrows: isDirected.value ? "to" : undefined,
+        arrows: getArrowsConfig(isDirected.value),
         font: { align: "top", size: 14, color: "#333333", background: "white" },
       });
       nodes.update({ id: sourceNode.value, color: null });
@@ -159,12 +188,16 @@ export function useGraph() {
 
   const toggleDirected = () => {
     isDirected.value = !isDirected.value;
-    const allEdges = edges.get();
-    const updates = allEdges.map((edge) => ({
-      id: edge.id,
-      arrows: isDirected.value ? "to" : undefined,
-    }));
-    edges.update(updates);
+    if (!isDirected.value) {
+      normalizeUndirectedEdges();
+    } else {
+      const allEdges = edges.get();
+      const updates = allEdges.map((edge) => ({
+        id: edge.id,
+        arrows: getArrowsConfig(true),
+      }));
+      edges.update(updates);
+    }
     if (showMatrixPanel.value) updateMatrix(); // Actualiza matriz en vivo
   };
 
@@ -252,6 +285,16 @@ export function useGraph() {
         if (data.isDirected !== undefined) isDirected.value = data.isDirected;
         if (data.nodes) nodes.add(data.nodes);
         if (data.edges) edges.add(data.edges);
+        // Fuerza consistencia visual de flechas segun modo dirigido/no dirigido.
+        const importedEdges = edges.get();
+        if (importedEdges.length > 0) {
+          edges.update(
+            importedEdges.map((edge) => ({
+              id: edge.id,
+              arrows: getArrowsConfig(isDirected.value),
+            })),
+          );
+        }
 
         // 4. Actualizamos la matriz si el panel está abierto
         if (showMatrixPanel.value) updateMatrix();
