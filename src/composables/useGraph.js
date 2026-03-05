@@ -42,6 +42,15 @@ const normalizeUndirectedEdges = () => {
   if (edgesToUpdate.length > 0) edges.update(edgesToUpdate);
 };
 
+const findEdgeBetweenNodes = (nodeA, nodeB) =>
+  edges
+    .get()
+    .find(
+      (edge) =>
+        (edge.from === nodeA && edge.to === nodeB) ||
+        (edge.from === nodeB && edge.to === nodeA),
+    );
+
 export function useGraph() {
   // Función para calcular y actualizar la matriz al instante
   const updateMatrix = () => {
@@ -124,6 +133,22 @@ export function useGraph() {
 
   const connectNodes = (targetId, weight) => {
     if (sourceNode.value !== null) {
+      if (!isDirected.value) {
+        const existingEdge = findEdgeBetweenNodes(sourceNode.value, targetId);
+        if (existingEdge) {
+          edges.update({
+            id: existingEdge.id,
+            label: String(weight),
+            arrows: getArrowsConfig(false),
+          });
+          nodes.update({ id: sourceNode.value, color: null });
+          sourceNode.value = null;
+          edgeStep.value = "Selecciona Origen";
+          if (showMatrixPanel.value) updateMatrix();
+          return;
+        }
+      }
+
       edges.add({
         from: sourceNode.value,
         to: targetId,
