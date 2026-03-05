@@ -17,6 +17,7 @@
               <th v-for="label in matrixData.labels" :key="'col-' + label">
                 {{ label }}
               </th>
+              <th class="sum-header">Suma fila</th>
             </tr>
           </thead>
           <tbody>
@@ -34,20 +35,39 @@
               >
                 {{ col }}
               </td>
+              <td class="sum-cell">
+                {{ sumasPorFila[rowIndex] }}
+              </td>
+            </tr>
+            <tr v-if="totalFilas > 0" class="sum-row">
+              <td class="row-header">
+                <strong>Suma col</strong>
+              </td>
+              <td
+                v-for="(suma, colIndex) in sumasPorColumna"
+                :key="'sum-col-' + colIndex"
+                class="sum-cell"
+              >
+                {{ suma }}
+              </td>
+              <td class="sum-cell total-cell">
+                {{ sumaTotalMatriz }}
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <p class="panel-info">
-        💡 Dibuja, borra o edita nodos y verás la matriz cambiar en vivo.
+        Filas: <strong>{{ totalFilas }}</strong> | Columnas:
+        <strong>{{ totalColumnas }}</strong>
       </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from "vue";
 import { Network } from "vis-network";
 import { useGraph } from "../composables/useGraph";
 
@@ -66,18 +86,45 @@ const {
   deleteEdge,
   showMatrixPanel,
   matrixData,
-  updateNodeLabel, // <-- ESTO DEBE ESTAR AQUÍ
+  updateNodeLabel, // <-- ESTO DEBE ESTAR AQUI
 } = useGraph();
 
 let network = null;
 
-// CORRECCIÓN 1: Quitamos el "bold: true" que rompía el dibujo del nodo
+const totalFilas = computed(() => matrixData.value.matrix.length);
+const totalColumnas = computed(() => matrixData.value.labels.length);
+
+const sumasPorFila = computed(() =>
+  matrixData.value.matrix.map((row) =>
+    row.reduce((acc, val) => acc + (Number(val) || 0), 0),
+  ),
+);
+
+const sumasPorColumna = computed(() => {
+  const filas = matrixData.value.matrix;
+  const columnas = totalColumnas.value;
+  const result = Array(columnas).fill(0);
+
+  for (let i = 0; i < filas.length; i += 1) {
+    for (let j = 0; j < columnas; j += 1) {
+      result[j] += Number(filas[i][j]) || 0;
+    }
+  }
+
+  return result;
+});
+
+const sumaTotalMatriz = computed(() =>
+  sumasPorFila.value.reduce((acc, val) => acc + val, 0),
+);
+
+// CORRECCION 1: Quitamos el "bold: true" que rompia el dibujo del nodo
 const options = {
   physics: { enabled: false },
   interaction: { hover: true, dragNodes: true, dragView: true, zoomView: true },
   nodes: {
     shape: "circle",
-    font: { size: 18, color: "#000000" } /* Letra negra sólida y segura */,
+    font: { size: 18, color: "#000000" } /* Letra negra solida y segura */,
     borderWidth: 2,
     shadow: true,
     color: { background: "#97C2FC", border: "#2B7CE9" },
@@ -113,7 +160,7 @@ onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
 
     network.on("doubleClick", (params) => {
-      // ¡RECUERDA! Solo funciona si tienes la flechita (Mover) seleccionada
+      // �RECUERDA! Solo funciona si tienes la flechita (Mover) seleccionada
       if (currentMode.value === "move") {
         const clickedNodeId = params.nodes.length > 0 ? params.nodes[0] : null;
         const clickedEdgeId =
@@ -136,17 +183,17 @@ onMounted(() => {
       if (currentMode.value === "delete")
         borrarSeleccion(clickedNodeId, clickedEdgeId);
 
-      // Aquí es donde se agrega el nodo si la herramienta está activa
+      // Aqui es donde se agrega el nodo si la herramienta esta activa
       if (currentMode.value === "node" && !clickedNodeId)
         addNode(clickPos.x, clickPos.y);
 
       if (currentMode.value === "edge" && clickedNodeId) {
         if (sourceNode.value === null) setSourceNode(clickedNodeId);
         else {
-          let peso = prompt("Ingresa el peso de la arista (SOLO NÚMEROS):");
+          let peso = prompt("Ingresa el peso de la arista (SOLO NUMEROS):");
           if (peso !== null) {
             while (isNaN(peso) || peso.trim() === "") {
-              peso = prompt("❌ Valor inválido. Ingresa SOLO NÚMEROS:");
+              peso = prompt("Valor invalido. Ingresa SOLO NUMEROS:");
               if (peso === null) break;
             }
           }
@@ -180,29 +227,29 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* --- MAQUETACIÓN DIVIDIDA (EL CONTENEDOR PADRE) --- */
+/* --- MAQUETACION DIVIDIDA (EL CONTENEDOR PADRE) --- */
 .editor-layout {
   display: flex;
   flex-direction: row;
   width: 100%;
 
-  /* Usamos 85vh (85% de la pantalla) que es mucho más seguro 
-     y no chocará con tu barra verde de arriba */
+  /* Usamos 85vh (85% de la pantalla) que es mucho mas seguro
+     y no chocara con tu barra verde de arriba */
   height: 85vh;
   min-height: 600px;
   overflow: hidden;
-  border-bottom: 2px solid #e2e8f0; /* Una línea sutil para ver dónde termina tu área de trabajo */
+  border-bottom: 2px solid #e2e8f0; /* Una linea sutil para ver donde termina tu area de trabajo */
 }
 
 /* --- LADO IZQUIERDO (EL LIENZO) --- */
 .canvas-wrapper {
-  flex: 1; /* Toma el 70% o el 100% según si la matriz está abierta */
+  flex: 1; /* Toma el 70% o el 100% segun si la matriz esta abierta */
   position: relative; /* Clave para el truco de abajo */
   height: 100%;
 }
 
 .canvas-container {
-  /* ¡ESTE ES EL TRUCO MÁGICO! Fuerza al lienzo a estirarse a las 4 esquinas de su padre */
+  /* �ESTE ES EL TRUCO MAGICO! Fuerza al lienzo a estirarse a las 4 esquinas de su padre */
   position: absolute;
   top: 0;
   bottom: 0;
@@ -256,26 +303,38 @@ onUnmounted(() => {
   background: white;
 }
 
-/* 2. Busca .matriz-table th, .matriz-table td y reemplázalo por esto: */
 .matriz-table th,
 .matriz-table td {
   border: 1px solid #cbd5e1;
-  /* Reducimos de 40px a 32px para que la tabla sea más compacta */
   width: 32px;
   height: 32px;
   text-align: center;
   vertical-align: middle;
-  font-size: 0.9rem; /* Letra un pelín más pequeña */
+  font-size: 0.9rem;
 }
+
 .row-header {
   background: #f1f5f9;
   color: #334155;
+}
+
+.sum-header,
+.sum-cell,
+.sum-row .row-header {
+  background: #ecfeff;
+  color: #155e75;
+  font-weight: 700;
+}
+
+.total-cell {
+  background: #cffafe;
 }
 
 .celda-cero {
   color: #cbd5e1;
   font-size: 0.85rem;
 }
+
 .celda-valor {
   font-weight: bold;
   color: #2563eb;
@@ -296,6 +355,7 @@ onUnmounted(() => {
   .editor-layout {
     flex-direction: column;
   }
+
   .matrix-panel {
     width: 100%;
     height: 300px;
