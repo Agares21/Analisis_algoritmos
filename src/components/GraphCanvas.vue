@@ -1,4 +1,4 @@
-<template>
+ï»¿<template>
   <div class="editor-layout">
     <div class="canvas-wrapper">
       <div ref="canvasRef" class="canvas-container"></div>
@@ -62,6 +62,9 @@
         Filas: <strong>{{ totalFilas }}</strong> | Columnas:
         <strong>{{ totalColumnas }}</strong>
       </p>
+      <p class="panel-info convergencia-info" v-if="resumenConvergencia.length > 0">
+        Convergencia: <strong>{{ resumenConvergencia.join(" | ") }}</strong>
+      </p>
     </div>
   </div>
 </template>
@@ -86,7 +89,7 @@ const {
   deleteEdge,
   showMatrixPanel,
   matrixData,
-  updateNodeLabel, // <-- ESTO DEBE ESTAR AQUI
+  updateNodeLabel,
 } = useGraph();
 
 let network = null;
@@ -118,13 +121,32 @@ const sumaTotalMatriz = computed(() =>
   sumasPorFila.value.reduce((acc, val) => acc + val, 0),
 );
 
-// CORRECCION 1: Quitamos el "bold: true" que rompia el dibujo del nodo
+const convergenciaPorNodo = computed(() => {
+  const filas = matrixData.value.matrix;
+  const columnas = totalColumnas.value;
+  const result = Array(columnas).fill(0);
+
+  for (let i = 0; i < filas.length; i += 1) {
+    for (let j = 0; j < columnas; j += 1) {
+      if (Number(filas[i][j]) !== 0) result[j] += 1;
+    }
+  }
+
+  return result;
+});
+
+const resumenConvergencia = computed(() =>
+  matrixData.value.labels.map(
+    (label, index) => `${label}: ${convergenciaPorNodo.value[index] ?? 0}`,
+  ),
+);
+
 const options = {
   physics: { enabled: false },
   interaction: { hover: true, dragNodes: true, dragView: true, zoomView: true },
   nodes: {
     shape: "circle",
-    font: { size: 18, color: "#000000" } /* Letra negra solida y segura */,
+    font: { size: 18, color: "#000000" },
     borderWidth: 2,
     shadow: true,
     color: { background: "#97C2FC", border: "#2B7CE9" },
@@ -160,7 +182,6 @@ onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
 
     network.on("doubleClick", (params) => {
-      // ¡RECUERDA! Solo funciona si tienes la flechita (Mover) seleccionada
       if (currentMode.value === "move") {
         const clickedNodeId = params.nodes.length > 0 ? params.nodes[0] : null;
         const clickedEdgeId =
@@ -183,7 +204,6 @@ onMounted(() => {
       if (currentMode.value === "delete")
         borrarSeleccion(clickedNodeId, clickedEdgeId);
 
-      // Aqui es donde se agrega el nodo si la herramienta esta activa
       if (currentMode.value === "node" && !clickedNodeId)
         addNode(clickPos.x, clickPos.y);
 
@@ -227,35 +247,28 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* --- MAQUETACION DIVIDIDA (EL CONTENEDOR PADRE) --- */
 .editor-layout {
   display: flex;
   flex-direction: row;
   width: 100%;
-
-  /* Usamos 85vh (85% de la pantalla) que es mucho mas seguro
-     y no chocara con tu barra verde de arriba */
   height: 85vh;
   min-height: 600px;
   overflow: hidden;
-  border-bottom: 2px solid #e2e8f0; /* Una linea sutil para ver donde termina tu area de trabajo */
+  border-bottom: 2px solid #e2e8f0;
 }
 
-/* --- LADO IZQUIERDO (EL LIENZO) --- */
 .canvas-wrapper {
-  flex: 1; /* Toma el 70% o el 100% segun si la matriz esta abierta */
-  position: relative; /* Clave para el truco de abajo */
+  flex: 1;
+  position: relative;
   height: 100%;
 }
 
 .canvas-container {
-  /* ¡ESTE ES EL TRUCO MAGICO! Fuerza al lienzo a estirarse a las 4 esquinas de su padre */
   position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
-
   width: 100%;
   height: 100%;
   background: #ffffff;
@@ -264,11 +277,10 @@ onUnmounted(() => {
   outline: none;
 }
 
-/* --- LADO DERECHO (EL PANEL DE LA MATRIZ) --- */
 .matrix-panel {
   width: 30%;
   min-width: 320px;
-  height: 100%; /* Obliga a la matriz a tener la misma altura que el lienzo */
+  height: 100%;
   background: #f8fafc;
   border-left: 2px solid #e2e8f0;
   display: flex;
@@ -296,7 +308,6 @@ onUnmounted(() => {
   flex: 1;
 }
 
-/* --- TABLA --- */
 .matriz-table {
   border-collapse: collapse;
   margin: 0 auto;
@@ -349,6 +360,11 @@ onUnmounted(() => {
   background: #f1f5f9;
   margin: 0;
   border-top: 1px solid #e2e8f0;
+}
+
+.convergencia-info {
+  padding-top: 10px;
+  border-top: none;
 }
 
 @media (max-width: 768px) {
