@@ -18,6 +18,7 @@
                 {{ label }}
               </th>
               <th class="sum-header">Suma fila</th>
+              <th class="sum-header">Ocupados fila</th>
             </tr>
           </thead>
           <tbody>
@@ -38,6 +39,9 @@
               <td class="sum-cell">
                 {{ sumasPorFila[rowIndex] }}
               </td>
+              <td class="sum-cell">
+                {{ ocupadosPorFila[rowIndex] }}
+              </td>
             </tr>
             <tr v-if="totalFilas > 0" class="sum-row">
               <td class="row-header">
@@ -52,6 +56,27 @@
               </td>
               <td class="sum-cell total-cell">
                 {{ sumaTotalMatriz }}
+              </td>
+              <td class="sum-cell total-cell">
+                {{ totalOcupados }}
+              </td>
+            </tr>
+            <tr v-if="totalFilas > 0" class="sum-row">
+              <td class="row-header">
+                <strong>Ocupados col</strong>
+              </td>
+              <td
+                v-for="(ocupados, colIndex) in ocupadosPorColumna"
+                :key="'ocup-col-' + colIndex"
+                class="sum-cell"
+              >
+                {{ ocupados }}
+              </td>
+              <td class="sum-cell total-cell">
+                {{ totalOcupados }}
+              </td>
+              <td class="sum-cell total-cell">
+                {{ totalOcupados }}
               </td>
             </tr>
           </tbody>
@@ -119,6 +144,30 @@ const sumasPorColumna = computed(() => {
 
 const sumaTotalMatriz = computed(() =>
   sumasPorFila.value.reduce((acc, val) => acc + val, 0),
+);
+
+const ocupadosPorFila = computed(() =>
+  matrixData.value.matrix.map(
+    (row) => row.filter((value) => Number(value) !== 0).length,
+  ),
+);
+
+const ocupadosPorColumna = computed(() => {
+  const filas = matrixData.value.matrix;
+  const columnas = totalColumnas.value;
+  const result = Array(columnas).fill(0);
+
+  for (let i = 0; i < filas.length; i += 1) {
+    for (let j = 0; j < columnas; j += 1) {
+      if (Number(filas[i][j]) !== 0) result[j] += 1;
+    }
+  }
+
+  return result;
+});
+
+const totalOcupados = computed(() =>
+  ocupadosPorFila.value.reduce((acc, val) => acc + val, 0),
 );
 
 const convergenciaPorNodo = computed(() => {
